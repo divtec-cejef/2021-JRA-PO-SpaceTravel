@@ -1,7 +1,18 @@
 # 2021-JRA-PO-SpaceTravel
 
-## Space Travel
+## But du jeu :
+Vous devez partir de la terre avec un vaisseau spatial pour arriver sur Mars. Entre la Terre et Mars se trouve un immense champ d'astéroides qu'il faudra traverser sans les toucher. Le jeux se joue principalement a deux joueurs, un pilote et un tireur.
 
-Space travel est un jeux qui se joue à deux où se trouve un pilote et un tireur, vous devez partir de la terre avec un vaisseau spatial pour arriver sur Mars, entre la Terre et Mars se trouve un immense champ d'astéroides qu'il faudra passer mais il ne suffira pas de les éviter il faudra que le tireur détruise les astéroides qui vous empechechera de passer, certain des astéroides détruit rapporteront des bonus comme de l'essence ou des munitions, la partie se terminera quand le vaisseau atterira sur Mars, si il y a colision avec un astéroïde ou une panne d'essence.
+### Pilote
+Le pilote devra éviter les astéroïdes afin de ne pas provoquer une éxplosion du vaisseaux. Il devra aussi récupèrer les bonus et faire attention de ne pas tomber en panne d'essence pour pouvoir arriver sur Mars.
+
+### Tireur
+Le tireur devra détruire les astéroïdes afin de dégager le passage au pilote pour facilité le passage au pilote, certain astéroïde donnerons aussi des bonus d'essence et de munitions qui pourront être essentiel au bon déroulement du voyage.
 
 
+## Matériel
+### Pilote
+Le pilote aura a disposition un joystick et 6 écrans.
+
+### Tireur
+Le tireur aura à disposition un casque VR avec les contrôleurs.
