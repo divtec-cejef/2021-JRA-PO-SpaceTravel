@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Controlysis Manual</title>
+<style type="text/css">
+body{
+	font-family:Verdana, Geneva, sans-serif;
+}
+dt,span{
+	font-family:"Courier New", Courier, monospace;
+	background-color:#CCC;	
+}
+dt{
+	padding:1px;
+	margin-top:2px;
+}
+h2,h3{
+	clear:both;
+}
+h2{
+	padding-top:2em;
+}
+
+</style>
+</head>
+
+<body>
+<h1>Controlysis User Manual</h1>
+<h2>Contents</h2>
+<ol>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#installation">Manual Installation</a></li>
+<li><a href="#usage">Usage</a>
+  <ul>
+  <li><a href="#usage.types">Types</a></li>
+  <li><a href="#usage.functions">Functions</a></li>
+  <li><a href="#usage.example">Example</a></li>
+  </ul>
+</li>
+<li><a href="#demo">Examples</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+<h2><a name="introduction" />Introduction</h2>
+<p>Generic controller support for UE4. Provides blueprint nodes for discovering and polling all controllers recognized by SDL, including those only having a DirectInput driver and no XInput support.</p>
+<h2><a name="installation" />Manual Installation (ignore for Unreal Marketplace installs)</h2>
+<p><img src="images/installation.png" style="float:right;" />Copy the plugin itself (the Controlysis folder) into your plugins directory as shown. The image shows installing it into a single project (named TutPaper2D). If your project has no Plugins directory, just create one -- plugins will be loaded from it automatically with no additional setup. Alternatively, you can copy it into the Plugins folder of your engine install so it will be available to all projects on your system, and in the Plugins window of the editor it will appear under "Built-in" instead of "Project". In either case, it will be under the category "Input Devices".</p>
+<p>Note: Do not install the plugin in both your engine and your project. One or the other is enough.</p>
+<p>The plugin is set to be enabled by default, so you should have access to the functions and types without doing anything else. If you don't, go into the Plugins window and make sure Controlysis is set to Enabled.</p>
+<h2><a name="usage" />Usage</h2>
+<p>There is no project-level setup, no components to add to your BP/map, and no context or scope to keep track of. Just go into any blueprint you want and start calling Controlysis functions to read input. Be aware that the ability to support multiple control devices per local player means that Controlysis cannot abstract away the local-player-to-device mapping like the default UE4 control system does. So you will need to query the correct controller for each player.</p>
+<h3><a name="usage.types" />Types</h3>
+<p><img src="images/types.png" style="float:right;" />Typing "generic controller" in the variable type autocomplete will bring up all the types related to identifying controllers. The only other type provided by Controlysis is the HatDirection enum.</p>
+<p>In Controlysis, you reference an individual controller by its ID (<span>GenericControllerId</span>). Breaking this struct reveals it is a combination of Model (<span>GenericControllerModel</span>) and Instance (integer). By combining the two, the semantic meaning is something like "The third XBox360 controller" or "The first TM Warthog flight stick". Referring to controllers this way provides stability -- for example, adding or removing controllers between sessions could change the DirectInput index of existing controllers, screwing up all your keybinds if you referred to controllers that way. This method makes sure any Controller Id always refers to the same thing regardless of detection order. Also, the Instance is determined when your game is launched -- so if you have 2 or more controllers of the same model connected, and you take away the first one, then next time you launch the game there will still be a controller of that model at Instance 0.</p>
+<p>The Model (<span>GenericControllerModel</span>) represents the "Hardware Id" in USB parlance. (Yes, Bluetooth controllers have the same kind of ID.) It consists of the VID (Vendor Id, representing the manufacturer) and PID (Product Id, assigned by the manufacturer for each model of device they make). Together, they uniquely identify a controller model, for example "an XBox 360 controller" or "a PS4 controller". If you want to provide special support for a certain kind of controller, for example, providing a default configuration different from the normal one, then you should find out the device's VID and PID and compare them against this. You could also compare against the text name found in the Layout, but that may be less reliable.</p>
+<p>The Layout (<span>GenericControllerLayout</span>) describes the features of a controller of a certain Model.  It includes how many of each input it has (buttons, axes, etc) as well as the text name. You should always use the Layout to verify that a controller actually has a feature before you try to poll it or Bad Things can happen (ranging from "nothing" to "crashing your game").</p>
+<h3><a name="usage.functions" />Functions</h3>
+<p><img src="images/functions.png" style="float:right;" />All functions provided by Controlysis are in the "Controlysis" category, so typing that name into the Blueprint autocomplete will bring up everything.
+<dl>
+<dt>Get Controllers</dt><dd>Get references to all controllers currently available.</dd>
+<dt>Get Controller Model Layout</dt><dd>Get the layout (text name, number of buttons, etc) of a given model of controller.</dd>
+<dt>Get Controller Layout</dt><dd>Like "Get Controller Model Layout", but you give it the id of an active controller instead of the model. For convenience.</dd>
+<dt>Poll _______</dt><dd>This is what you're probably here for. Get the current state of some input on a given controller. "Poll Button" returns boolean, "Poll Axis" returns a float normalized from -1.0 to 1.0, "Poll Hat" returns a HatDirection enum, and "Poll Ball" returns raw int32 deltas representing all trackball movement since the last poll.</dd>
+<dt>ForceFeedback_Conditional</dt><dd>A few specialized devices support these "conditional" effects where the result depends on factors having to do with the physical state of the device. The "type" can be one of: Spring, Damper, Inertia, Friction.</dd>
+<dt>ForceFeedback_Constant</dt><dd>This function is your main workhorse for most true force feedback devices like wheels and flight sticks. Simply push the device in a given direction, strength, and duration. For single axis devices the input direction is not used and you control the direction via using a positive or negative strength.</dd>
+<dt>ForceFeedback_Periodic</dt><dd>Like constant, but with a strength that regularly goes up and down with a given period/cycle-length. Tip: if your minimum strength is negative and max is positive, the device will waggle back and forth, so to speak.</dd>
+<dt>ForceFeedback_Ramp</dt><dd>Like constant, but with a defined starting and ending strength. The strength will transition smoothly between the two over the duration of the effect.</dd>
+<dt>ForceFeedback_Rumble</dt><dd>Use the rumble found in most modern console-style controllers with two motors, small and large.</dd>
+<dt>ForceFeedback_SetAutocentering</dt><dd>Set the current auto-centering strength. Many devices don't support this in which case you'll need to implement centering using the other effects.</dd>
+<dt>ForceFeedback_Stop</dt><dd>Stop all force feedback effects on the controller (note that autocentering doesn't count as an "effect" so it isn't affected by this)</dd>
+</dl></p>
+<h2><a name="demo" />Examples</h2>
+<p>Controlysis includes an example pawn/character "ControlysisDemoCharacter" that shows how to use Controlysis to control a character similar to the one in the built in "First Person Example" project. It will use the first controller it finds that looks like a 2-stick console controller, print its name on BeginPlay, and let you move around with the sticks, shoot with button 0, and jump with button 1. The easiest way to use it: just set your game mode to ControlysisDemoGameMode, make sure there are no other default pawns to interfere (there will be on the First Person Example but not on a blank project) then click Play and you should spawn as the ControlysisDemoCharacter.</p>
+<p>Controlysis also includes a UMG widget called "ControllerDiagnostic" which shows the status of every input on every controller attached to the system, in real-time via UMG property binds. No setup needed, just add it to the viewport and it works. This also demonstrates that you can poll the same inputs from multiple places without side effect (except for trackballs as they return delta per poll).</p>
+<p>You would need to set the input mode to UI in order to directly interact with the ControllerDiagnostic i.e. to click its buttons or scroll through the controllers if you have more than 1 screen worth of controllers connected to your system.</p>
+<p>Note that you can use Controlysis in tandem with the default UE4 input system. This means you can implement mouse and keyboard the same way as in the stock First Person Template, while reading controllers via Controlysis. The movement from multiple input types is added together in Blueprint.</p>
+<h2><a name="faq" />FAQ</h2>
+<dl>
+<dt>I package my project and get missing file errors? But it works fine when playing in the editor!</dt>
+<dd>Sometimes the packaging process of the UE4 Editor doesn't copy the DLL files correctly. Look in the plugin's binaries folder for your platform, find the DLL files both for Controlysis and SDL, and copy them to the same place as your game's packaged EXE -- that is, the actual engine EXE, not the launcher -- for example: WindowsNoEditor\ShooterGame\Binaries\Win64\ShooterGame-Win64-Shipping.exe</dd>
+</dl>
+</body>
+</html>
